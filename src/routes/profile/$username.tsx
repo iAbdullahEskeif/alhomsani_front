@@ -295,8 +295,6 @@ function ProfilePage() {
   }, [bookmarkedCarsData]);
 
   const handleUpdateProfile = async () => {
-    if (!editedProfile.profile_picture) return;
-
     try {
       setIsUpdating(true);
       const token = await getToken();
@@ -330,7 +328,6 @@ function ProfilePage() {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
-          // Note: Do not set 'Content-Type' header when using FormData
         },
         body: formData,
       });
