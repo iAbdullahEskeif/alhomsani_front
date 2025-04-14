@@ -46,7 +46,7 @@ const Galleries = () => {
           <AccordionItem
             key={index}
             value={`item-${index}`}
-            className="border border-zinc-800 rounded-lg bg-zinc-900 px-0 hover:border-amber-800/50"
+            className="border border-zinc-800 rounded-lg bg-zinc-900 px-0 "
           >
             <AccordionTrigger className="px-4 py-3 text-white hover:no-underline hover:bg-zinc-800 rounded-t-lg data-[state=open]:rounded-b-none data-[state=open]:border-b data-[state=open]:border-zinc-800 data-[state=open]:text-amber-300">
               <span className="font-medium">{gallery.title}</span>
