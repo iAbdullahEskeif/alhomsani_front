@@ -1,8 +1,8 @@
-"use client";
+"se client";
 
 import { useState, useEffect, useRef } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
 import { API_URL } from "../../config";
 import StripeComponent from "../../components/StripeComponent.tsx";
 import {
@@ -857,7 +857,7 @@ function ProductDetail() {
                       variant="outline"
                       className="bg-amber-800/20 text-amber-300 border-amber-700/50 hover:bg-amber-800/40"
                       onClick={() => {
-                        if (!isSignedIn || !user) {
+                        if (!isSignedIn) {
                           toast.error("Please sign in to write a review");
                           return;
                         }
