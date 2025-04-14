@@ -99,12 +99,11 @@ function ProductDetail() {
 
   // Replace the above removed code with this simplified version
   const { isSignedIn, getToken } = useAuth();
-  const { user, isLoaded } = useUser();
 
   // Check if car is in favorites/bookmarks on component mount
   useEffect(() => {
     const checkSavedStatus = async () => {
-      if (!isSignedIn || !user || !isLoaded) return;
+      if (!isSignedIn) return;
 
       try {
         const token = await getToken();
@@ -126,7 +125,7 @@ function ProductDetail() {
     };
 
     checkSavedStatus();
-  }, [isSignedIn, getToken, id, isLoaded, user]);
+  }, [isSignedIn, getToken, id]);
 
   const handleBuyNowClick = () => {
     if (!isSignedIn) {
@@ -782,7 +781,7 @@ function ProductDetail() {
               variant="ghost"
               className="text-zinc-400 hover:text-amber-300 hover:bg-zinc-800"
               onClick={() => {
-                if (!isSignedIn || !user) {
+                if (!isSignedIn) {
                   toast.error("Please sign in to write a review");
                   return;
                 }
@@ -834,7 +833,7 @@ function ProductDetail() {
                               <User className="size-4" />
                             </div>
                             <div className="font-medium text-white">
-                              {user?.username}
+                              {review.reviewer}
                             </div>
                           </div>
                           <div className="text-zinc-500 text-sm">
