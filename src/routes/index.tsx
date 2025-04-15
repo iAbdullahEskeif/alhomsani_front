@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Award,
   Shield,
@@ -51,24 +53,28 @@ interface Car {
   fuel_tank_capacity: number;
   trunk_capacity_liters: number;
 }
-interface ApiResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Car[];
+
+// Add this new interface for Profile at the top with the other interfaces
+interface Profile {
+  user: number;
+  name: string;
+  location: string;
+  contact_info: string;
+  bio: string;
+  profile_picture: File | string | null | undefined;
+  profile_picture_url: string;
+  favorite_cars: number[];
+  bookmarked_cars: number[];
+  activity_log?: ActivityItem[]; // Make this optional
+  member_since: string;
 }
 
-// Define the type for the featured vehicle
-interface FeaturedVehicle {
+// Add this interface for ActivityItem
+interface ActivityItem {
   id: number;
-  name: string;
-  price: number;
-  image: string;
-  specs: {
-    power: string;
-    acceleration: string;
-    topSpeed: string;
-  };
+  action: string;
+  timestamp: string;
+  details: string;
 }
 
 function Index() {
@@ -82,60 +88,92 @@ function Index() {
   const { isSignedIn, getToken } = useAuth();
   const [favorites, setFavorites] = useState<number[]>([]);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [featuredVehicles, setFeaturedVehicles] = useState<FeaturedVehicle[]>(
-    [],
-  );
-  const [loading, setLoading] = useState<boolean>(false);
+  const [featuredVehicles, setFeaturedVehicles] = useState<
+    {
+      id: number;
+      name: string;
+      price: number;
+      image: string;
+      specs: {
+        power: string;
+        acceleration: string;
+        topSpeed: string;
+      };
+    }[]
+  >([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true); // State for loading
+
+  // Modify the useEffect section to fetch both featured vehicles and profile data
   useEffect(() => {
-    const fetchFeaturedVehicles = async () => {
-      setLoading(true);
+    const fetchData = async () => {
+      setLoadingFeatured(true);
       const token = await getToken();
+
       try {
-        const response = await fetch(`${API_URL}/api/`, {
+        // Fetch featured vehicles
+        const vehiclesResponse = await fetch(`${API_URL}/api/`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+
+        if (!vehiclesResponse.ok) {
+          throw new Error(`HTTP error! status: ${vehiclesResponse.status}`);
         }
-        const data: ApiResponse = await response.json();
-        // Extract vehicles from the "results" property
-        const vehicles = data.results;
-        // Sort vehicles by created_at in descending order
-        const sortedVehicles = vehicles.sort(
+
+        const data: Car[] = await vehiclesResponse.json();
+        const newestVehicles = data.sort(
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         );
-        // Select the first 3 vehicles and map them to the FeaturedVehicle format
-        const selectedVehicles: FeaturedVehicle[] = sortedVehicles
-          .slice(0, 3)
-          .map((car) => ({
-            id: car.id,
-            name: car.name,
-            price: car.price,
-            image: car.image_url || "/placeholder.svg",
-            specs: {
-              power: car.power,
-              acceleration: car.acceleration_0_100,
-              topSpeed: car.top_speed,
-            },
-          }));
+
+        const selectedVehicles = newestVehicles.slice(0, 3).map((car) => ({
+          id: car.id,
+          name: car.name,
+          price: car.price,
+          image: car.image_url || "/placeholder.svg",
+          specs: {
+            power: car.power,
+            acceleration: car.acceleration_0_100,
+            topSpeed: car.top_speed,
+          },
+        }));
+
         setFeaturedVehicles(selectedVehicles);
+
+        // Only fetch profile if user is signed in
+        if (isSignedIn) {
+          // Fetch user profile to get favorites and bookmarks
+          const profileResponse = await fetch(`${API_URL}/profiles/`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (profileResponse.ok) {
+            const profileData: Profile = await profileResponse.json();
+            // Initialize favorites and bookmarks from profile data
+            setFavorites(profileData.favorite_cars || []);
+            setBookmarks(profileData.bookmarked_cars || []);
+          }
+        }
       } catch (error) {
-        console.error("Error fetching featured vehicles:", error);
-        toast.error("Failed to load featured vehicles");
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data");
         setFeaturedVehicles([]);
       } finally {
-        setLoading(false);
+        setLoadingFeatured(false);
       }
     };
 
-    fetchFeaturedVehicles();
-  }, [getToken]);
-  // Toggle favorite
+    fetchData();
+  }, [getToken, isSignedIn]);
+
+  // Update the toggleFavorite function to handle the case where a car is already favorited
   const toggleFavorite = async (carId: number) => {
     if (!isSignedIn) {
       toast.error("Please sign in to add favorites");
@@ -143,48 +181,74 @@ function Index() {
     }
 
     const isFavorite = favorites.includes(carId);
-    // Optimistically update UI
-    if (isFavorite) {
-      setFavorites(favorites.filter((id) => id !== carId));
-    } else {
+
+    // Don't do anything if we're trying to add a favorite that's already there
+    if (!isFavorite) {
+      // Optimistically update UI
       setFavorites([...favorites, carId]);
-    }
 
-    try {
-      const endpoint = isFavorite
-        ? `/profiles/favorites/remove/${carId}/`
-        : `/profiles/favorites/add/${carId}/`;
-      const token = await getToken();
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ car_id: carId }),
-      });
+      try {
+        const endpoint = `/profiles/favorites/add/${carId}/`;
+        const token = await getToken();
+        const response = await fetch(`${API_URL}${endpoint}`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ car_id: carId }),
+        });
 
-      if (!response.ok) {
-        throw new Error(
-          `Failed to ${isFavorite ? "remove from" : "add to"} favorites`,
-        );
-      }
+        if (!response.ok) {
+          // Check if the error is because the car is already favorited
+          const errorData = await response.json();
+          if (errorData.detail && errorData.detail.includes("already")) {
+            // The car is already favorited, so we can keep our optimistic update
+            toast.info("This vehicle is already in your favorites");
+            return;
+          }
+          throw new Error(`Failed to add to favorites`);
+        }
 
-      toast.success(
-        isFavorite ? "Removed from favorites" : "Added to favorites",
-      );
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-      toast.error("Failed to update favorites");
-      // Revert the optimistic update
-      if (isFavorite) {
-        setFavorites([...favorites, carId]);
-      } else {
+        toast.success("Added to favorites");
+      } catch (error) {
+        console.error("Error adding favorite:", error);
+        toast.error("Failed to update favorites");
+        // Revert the optimistic update
         setFavorites(favorites.filter((id) => id !== carId));
+      }
+    } else {
+      // Removing a favorite
+      // Optimistically update UI
+      setFavorites(favorites.filter((id) => id !== carId));
+
+      try {
+        const endpoint = `/profiles/favorites/remove/${carId}/`;
+        const token = await getToken();
+        const response = await fetch(`${API_URL}${endpoint}`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ car_id: carId }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to remove from favorites`);
+        }
+
+        toast.success("Removed from favorites");
+      } catch (error) {
+        console.error("Error removing favorite:", error);
+        toast.error("Failed to update favorites");
+        // Revert the optimistic update
+        setFavorites([...favorites, carId]);
       }
     }
   };
-  // Toggle bookmark
+
+  // Update the toggleBookmark function to handle the case where a car is already bookmarked
   const toggleBookmark = async (carId: number) => {
     if (!isSignedIn) {
       toast.error("Please sign in to add bookmarks");
@@ -192,44 +256,69 @@ function Index() {
     }
 
     const isBookmarked = bookmarks.includes(carId);
-    // Optimistically update UI
-    if (isBookmarked) {
-      setBookmarks(bookmarks.filter((id) => id !== carId));
-    } else {
+
+    // Don't do anything if we're trying to add a bookmark that's already there
+    if (!isBookmarked) {
+      // Optimistically update UI
       setBookmarks([...bookmarks, carId]);
-    }
 
-    try {
-      const endpoint = isBookmarked
-        ? `/profiles/bookmarks/remove/${carId}/`
-        : `/profiles/bookmarks/add/${carId}/`;
-      const token = await getToken();
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ car_id: carId }),
-      });
+      try {
+        const endpoint = `/profiles/bookmarks/add/${carId}/`;
+        const token = await getToken();
+        const response = await fetch(`${API_URL}${endpoint}`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ car_id: carId }),
+        });
 
-      if (!response.ok) {
-        throw new Error(
-          `Failed to ${isBookmarked ? "remove from" : "add to"} bookmarks`,
-        );
-      }
+        if (!response.ok) {
+          // Check if the error is because the car is already bookmarked
+          const errorData = await response.json();
+          if (errorData.detail && errorData.detail.includes("already")) {
+            // The car is already bookmarked, so we can keep our optimistic update
+            toast.info("This vehicle is already in your bookmarks");
+            return;
+          }
+          throw new Error(`Failed to add to bookmarks`);
+        }
 
-      toast.success(
-        isBookmarked ? "Removed from bookmarks" : "Added to bookmarks",
-      );
-    } catch (error) {
-      console.error("Error toggling bookmark:", error);
-      toast.error("Failed to update bookmarks");
-      // Revert the optimistic update
-      if (isBookmarked) {
-        setBookmarks([...bookmarks, carId]);
-      } else {
+        toast.success("Added to bookmarks");
+      } catch (error) {
+        console.error("Error adding bookmark:", error);
+        toast.error("Failed to update bookmarks");
+        // Revert the optimistic update
         setBookmarks(bookmarks.filter((id) => id !== carId));
+      }
+    } else {
+      // Removing a bookmark
+      // Optimistically update UI
+      setBookmarks(bookmarks.filter((id) => id !== carId));
+
+      try {
+        const endpoint = `/profiles/bookmarks/remove/${carId}/`;
+        const token = await getToken();
+        const response = await fetch(`${API_URL}${endpoint}`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ car_id: carId }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to remove from bookmarks`);
+        }
+
+        toast.success("Removed from bookmarks");
+      } catch (error) {
+        console.error("Error removing bookmark:", error);
+        toast.error("Failed to update bookmarks");
+        // Revert the optimistic update
+        setBookmarks([...bookmarks, carId]);
       }
     }
   };
@@ -274,7 +363,7 @@ function Index() {
             Featured Vehicles
           </h2>
 
-          {loading ? (
+          {loadingFeatured ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[...Array(3)].map((_, i) => (
                 <FeaturedSkeleton key={i} />
