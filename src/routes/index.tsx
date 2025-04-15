@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Award,
   Shield,
@@ -131,8 +133,16 @@ function Index() {
       toast.error("Please sign in to add favorites");
       return;
     }
+
+    const isFavorite = favorites.includes(carId);
+    // Optimistically update UI
+    if (isFavorite) {
+      setFavorites(favorites.filter((id) => id !== carId));
+    } else {
+      setFavorites([...favorites, carId]);
+    }
+
     try {
-      const isFavorite = favorites.includes(carId);
       const endpoint = isFavorite
         ? `/profiles/favorites/remove/${carId}/`
         : `/profiles/favorites/add/${carId}/`;
@@ -145,22 +155,25 @@ function Index() {
         },
         body: JSON.stringify({ car_id: carId }),
       });
+
       if (!response.ok) {
         throw new Error(
           `Failed to ${isFavorite ? "remove from" : "add to"} favorites`,
         );
       }
-      // Update local state
-      if (isFavorite) {
-        setFavorites(favorites.filter((id) => id !== carId));
-        toast.success("Removed from favorites");
-      } else {
-        setFavorites([...favorites, carId]);
-        toast.success("Added to favorites");
-      }
+
+      toast.success(
+        isFavorite ? "Removed from favorites" : "Added to favorites",
+      );
     } catch (error) {
       console.error("Error toggling favorite:", error);
       toast.error("Failed to update favorites");
+      // Revert the optimistic update
+      if (isFavorite) {
+        setFavorites([...favorites, carId]);
+      } else {
+        setFavorites(favorites.filter((id) => id !== carId));
+      }
     }
   };
   // Toggle bookmark
@@ -169,8 +182,16 @@ function Index() {
       toast.error("Please sign in to add bookmarks");
       return;
     }
+
+    const isBookmarked = bookmarks.includes(carId);
+    // Optimistically update UI
+    if (isBookmarked) {
+      setBookmarks(bookmarks.filter((id) => id !== carId));
+    } else {
+      setBookmarks([...bookmarks, carId]);
+    }
+
     try {
-      const isBookmarked = bookmarks.includes(carId);
       const endpoint = isBookmarked
         ? `/profiles/bookmarks/remove/${carId}/`
         : `/profiles/bookmarks/add/${carId}/`;
@@ -183,22 +204,25 @@ function Index() {
         },
         body: JSON.stringify({ car_id: carId }),
       });
+
       if (!response.ok) {
         throw new Error(
           `Failed to ${isBookmarked ? "remove from" : "add to"} bookmarks`,
         );
       }
-      // Update local state
-      if (isBookmarked) {
-        setBookmarks(bookmarks.filter((id) => id !== carId));
-        toast.success("Removed from bookmarks");
-      } else {
-        setBookmarks([...bookmarks, carId]);
-        toast.success("Added to bookmarks");
-      }
+
+      toast.success(
+        isBookmarked ? "Removed from bookmarks" : "Added to bookmarks",
+      );
     } catch (error) {
       console.error("Error toggling bookmark:", error);
       toast.error("Failed to update bookmarks");
+      // Revert the optimistic update
+      if (isBookmarked) {
+        setBookmarks([...bookmarks, carId]);
+      } else {
+        setBookmarks(bookmarks.filter((id) => id !== carId));
+      }
     }
   };
   const FeaturedSkeleton = () => (
@@ -215,7 +239,7 @@ function Index() {
         <Skeleton className="h-4 w-1/2 mb-4 bg-zinc-800" />
         <div className="grid grid-cols-3 gap-2 mb-6">
           {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-20 bg-zinc-800 rounded-md" />
+            <Skeleton key={i} className="h-24 bg-zinc-800 rounded-md" />
           ))}
         </div>
         <Skeleton className="w-full h-10 bg-zinc-800" />
@@ -238,7 +262,7 @@ function Index() {
         className={`transition-opacity ease-in duration-700 ${isVisible2 ? "opacity-100" : "opacity-0"}`}
       >
         <div className="max-w-7xl mx-auto px-4 py-16">
-          <h2 className="text-3xl font-medium text-white mb-10">
+          <h2 className="text-3xl font-medium text-amber-300 mb-10">
             Featured Vehicles
           </h2>
 
@@ -293,31 +317,31 @@ function Index() {
                     </div>
                   </div>
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-medium text-white mb-2">
+                    <h3 className="text-xl font-medium text-amber-100 mb-2">
                       {vehicle.name}
                     </h3>
                     <p className="text-amber-300 mb-4">
                       Starting at ${vehicle.price.toLocaleString()}
                     </p>
                     <div className="grid grid-cols-3 gap-2 mb-6">
-                      <div className="flex flex-col items-center p-2 bg-zinc-800 rounded-md">
+                      <div className="flex flex-col items-center p-2 bg-zinc-800 rounded-md h-24 justify-between">
                         <Zap className="size-4 text-amber-600 mb-1" />
                         <span className="text-xs text-zinc-500">Power</span>
-                        <span className="text-sm font-medium text-white">
+                        <span className="text-sm font-medium text-white text-center line-clamp-2">
                           {vehicle.specs.power}
                         </span>
                       </div>
-                      <div className="flex flex-col items-center p-2 bg-zinc-800 rounded-md">
+                      <div className="flex flex-col items-center p-2 bg-zinc-800 rounded-md h-24 justify-between">
                         <Clock className="size-4 text-amber-600 mb-1" />
                         <span className="text-xs text-zinc-500">0-100</span>
-                        <span className="text-sm font-medium text-white">
+                        <span className="text-sm font-medium text-white text-center line-clamp-2">
                           {vehicle.specs.acceleration}
                         </span>
                       </div>
-                      <div className="flex flex-col items-center p-2 bg-zinc-800 rounded-md">
+                      <div className="flex flex-col items-center p-2 bg-zinc-800 rounded-md h-24 justify-between">
                         <Gauge className="size-4 text-amber-600 mb-1" />
                         <span className="text-xs text-zinc-500">Top Speed</span>
-                        <span className="text-sm font-medium text-white">
+                        <span className="text-sm font-medium text-white text-center line-clamp-2">
                           {vehicle.specs.topSpeed}
                         </span>
                       </div>
@@ -348,7 +372,7 @@ function Index() {
         <div className="bg-zinc-900 py-16">
           <div className="max-w-7xl mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-medium text-white mb-4">
+              <h2 className="text-3xl font-medium text-amber-300 mb-4">
                 Why Choose Luxury Automotive
               </h2>
               <p className="text-zinc-400 max-w-2xl mx-auto">
@@ -362,7 +386,7 @@ function Index() {
                   <div className="size-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
                     <Award className="size-6 text-amber-600" />
                   </div>
-                  <h3 className="text-xl font-medium text-white mb-2">
+                  <h3 className="text-xl font-medium text-amber-100 mb-2">
                     Premium Selection
                   </h3>
                   <p className="text-zinc-400">
@@ -376,7 +400,7 @@ function Index() {
                   <div className="size-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
                     <Tool className="size-6 text-amber-600" />
                   </div>
-                  <h3 className="text-xl font-medium text-white mb-2">
+                  <h3 className="text-xl font-medium text-amber-100 mb-2">
                     Expert Maintenance
                   </h3>
                   <p className="text-zinc-400">
@@ -390,7 +414,7 @@ function Index() {
                   <div className="size-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
                     <Shield className="size-6 text-amber-600" />
                   </div>
-                  <h3 className="text-xl font-medium text-white mb-2">
+                  <h3 className="text-xl font-medium text-amber-100 mb-2">
                     Extended Warranty
                   </h3>
                   <p className="text-zinc-400">
