@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useAuth, useUser } from "@clerk/clerk-react";
@@ -39,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 
 // Add these imports at the top of the file with the other imports
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
@@ -1059,8 +1058,14 @@ function ProfilePage() {
                                   variant="ghost"
                                   size="sm"
                                   className="text-zinc-400 hover:text-amber-200 hover:bg-zinc-700 h-8 px-2"
+                                  asChild
                                 >
-                                  View Details
+                                  <Link
+                                    to="/cars/$id"
+                                    params={{ id: car.id.toString() }}
+                                  >
+                                    View Details
+                                  </Link>
                                 </Button>
                               </div>
                             </CardContent>
@@ -1150,8 +1155,14 @@ function ProfilePage() {
                                   variant="ghost"
                                   size="sm"
                                   className="text-zinc-400 hover:text-amber-200 hover:bg-zinc-700 h-8 px-2"
+                                  asChild
                                 >
-                                  View Details
+                                  <Link
+                                    to="/cars/$id"
+                                    params={{ id: car.id.toString() }}
+                                  >
+                                    View Details
+                                  </Link>
                                 </Button>
                               </div>
                             </CardContent>

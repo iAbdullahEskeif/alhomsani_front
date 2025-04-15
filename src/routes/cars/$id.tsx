@@ -832,9 +832,18 @@ function ProductDetail() {
                             <div className="bg-amber-800/30 text-amber-300 p-1.5 rounded-full mr-2">
                               <User className="size-4" />
                             </div>
-                            <div className="font-medium text-white">
-                              {review.reviewer}
-                            </div>
+                            <Button
+                              variant="link"
+                              className="font-medium text-white p-0 h-auto hover:text-amber-300"
+                              asChild
+                            >
+                              <Link
+                                to="/profile/$username"
+                                params={{ username: review.reviewer }}
+                              >
+                                {review.reviewer}
+                              </Link>
+                            </Button>
                           </div>
                           <div className="text-zinc-500 text-sm">
                             {formatReviewDate(review.time_written)}
