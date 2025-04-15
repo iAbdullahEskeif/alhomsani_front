@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Award,
   Shield,
@@ -53,6 +51,25 @@ interface Car {
   fuel_tank_capacity: number;
   trunk_capacity_liters: number;
 }
+interface ApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Car[];
+}
+
+// Define the type for the featured vehicle
+interface FeaturedVehicle {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  specs: {
+    power: string;
+    acceleration: string;
+    topSpeed: string;
+  };
+}
 
 function Index() {
   const images = ["pic1.jpg", "pic2.webp", "pic3.png"];
@@ -65,24 +82,13 @@ function Index() {
   const { isSignedIn, getToken } = useAuth();
   const [favorites, setFavorites] = useState<number[]>([]);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [featuredVehicles, setFeaturedVehicles] = useState<
-    {
-      id: number;
-      name: string;
-      price: number;
-      image: string;
-      specs: {
-        power: string;
-        acceleration: string;
-        topSpeed: string;
-      };
-    }[]
-  >([]);
-  const [loadingFeatured, setLoadingFeatured] = useState(true); // State for loading
-
+  const [featuredVehicles, setFeaturedVehicles] = useState<FeaturedVehicle[]>(
+    [],
+  );
+  const [loading, setLoading] = useState<boolean>(false);
   useEffect(() => {
     const fetchFeaturedVehicles = async () => {
-      setLoadingFeatured(true); // Set loading to true when fetching starts
+      setLoading(true);
       const token = await getToken();
       try {
         const response = await fetch(`${API_URL}/api/`, {
@@ -95,38 +101,40 @@ function Index() {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data: Car[] = await response.json();
-        // Sort by created_at in descending order to get the newest ones
-        const newestVehicles = data.sort(
+        const data: ApiResponse = await response.json();
+        // Extract vehicles from the "results" property
+        const vehicles = data.results;
+        // Sort vehicles by created_at in descending order
+        const sortedVehicles = vehicles.sort(
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         );
-        // Take the first 3 newest vehicles
-        const selectedVehicles = newestVehicles.slice(0, 3).map((car) => ({
-          id: car.id,
-          name: car.name,
-          price: car.price,
-          image: car.image_url || "/placeholder.svg",
-          specs: {
-            power: car.power,
-            acceleration: car.acceleration_0_100,
-            topSpeed: car.top_speed,
-          },
-        }));
+        // Select the first 3 vehicles and map them to the FeaturedVehicle format
+        const selectedVehicles: FeaturedVehicle[] = sortedVehicles
+          .slice(0, 3)
+          .map((car) => ({
+            id: car.id,
+            name: car.name,
+            price: car.price,
+            image: car.image_url || "/placeholder.svg",
+            specs: {
+              power: car.power,
+              acceleration: car.acceleration_0_100,
+              topSpeed: car.top_speed,
+            },
+          }));
         setFeaturedVehicles(selectedVehicles);
       } catch (error) {
         console.error("Error fetching featured vehicles:", error);
         toast.error("Failed to load featured vehicles");
-        // Optionally set a default empty array or some fallback data
         setFeaturedVehicles([]);
       } finally {
-        setLoadingFeatured(false); // Set loading to false when fetching finishes
+        setLoading(false);
       }
     };
 
     fetchFeaturedVehicles();
   }, [getToken]);
-
   // Toggle favorite
   const toggleFavorite = async (carId: number) => {
     if (!isSignedIn) {
@@ -266,7 +274,7 @@ function Index() {
             Featured Vehicles
           </h2>
 
-          {loadingFeatured ? (
+          {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[...Array(3)].map((_, i) => (
                 <FeaturedSkeleton key={i} />
