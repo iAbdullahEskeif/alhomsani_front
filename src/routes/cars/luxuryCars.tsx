@@ -315,8 +315,16 @@ function LuxuryCars() {
       return;
     }
 
+    const isFavorite = favorites.includes(carId);
+
+    // Optimistically update UI
+    if (isFavorite) {
+      setFavorites(favorites.filter((id) => id !== carId));
+    } else {
+      setFavorites([...favorites, carId]);
+    }
+
     try {
-      const isFavorite = favorites.includes(carId);
       const endpoint = isFavorite
         ? `/profiles/favorites/remove/${carId}/`
         : `/profiles/favorites/add/${carId}/`;
@@ -332,22 +340,35 @@ function LuxuryCars() {
       });
 
       if (!response.ok) {
+        // Check if the error is because the car is already favorited/unfavorited
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.detail && errorData.detail.includes("already")) {
+          // The car is already in the desired state, so we can keep our optimistic update
+          toast.info(
+            isFavorite
+              ? "Already removed from favorites"
+              : "Already in your favorites",
+          );
+          return;
+        }
         throw new Error(
           `Failed to ${isFavorite ? "remove from" : "add to"} favorites`,
         );
       }
 
-      // Update local state
-      if (isFavorite) {
-        setFavorites(favorites.filter((id) => id !== carId));
-        toast.success("Removed from favorites");
-      } else {
-        setFavorites([...favorites, carId]);
-        toast.success("Added to favorites");
-      }
+      toast.success(
+        isFavorite ? "Removed from favorites" : "Added to favorites",
+      );
     } catch (error) {
       console.error("Error toggling favorite:", error);
       toast.error("Failed to update favorites");
+
+      // Revert the optimistic update
+      if (isFavorite) {
+        setFavorites([...favorites, carId]);
+      } else {
+        setFavorites(favorites.filter((id) => id !== carId));
+      }
     }
   };
 
@@ -358,8 +379,16 @@ function LuxuryCars() {
       return;
     }
 
+    const isBookmarked = bookmarks.includes(carId);
+
+    // Optimistically update UI
+    if (isBookmarked) {
+      setBookmarks(bookmarks.filter((id) => id !== carId));
+    } else {
+      setBookmarks([...bookmarks, carId]);
+    }
+
     try {
-      const isBookmarked = bookmarks.includes(carId);
       const endpoint = isBookmarked
         ? `/profiles/bookmarks/remove/${carId}/`
         : `/profiles/bookmarks/add/${carId}/`;
@@ -375,22 +404,35 @@ function LuxuryCars() {
       });
 
       if (!response.ok) {
+        // Check if the error is because the car is already bookmarked/unbookmarked
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.detail && errorData.detail.includes("already")) {
+          // The car is already in the desired state, so we can keep our optimistic update
+          toast.info(
+            isBookmarked
+              ? "Already removed from bookmarks"
+              : "Already in your bookmarks",
+          );
+          return;
+        }
         throw new Error(
           `Failed to ${isBookmarked ? "remove from" : "add to"} bookmarks`,
         );
       }
 
-      // Update local state
-      if (isBookmarked) {
-        setBookmarks(bookmarks.filter((id) => id !== carId));
-        toast.success("Removed from bookmarks");
-      } else {
-        setBookmarks([...bookmarks, carId]);
-        toast.success("Added to bookmarks");
-      }
+      toast.success(
+        isBookmarked ? "Removed from bookmarks" : "Added to bookmarks",
+      );
     } catch (error) {
       console.error("Error toggling bookmark:", error);
       toast.error("Failed to update bookmarks");
+
+      // Revert the optimistic update
+      if (isBookmarked) {
+        setBookmarks([...bookmarks, carId]);
+      } else {
+        setBookmarks(bookmarks.filter((id) => id !== carId));
+      }
     }
   };
 

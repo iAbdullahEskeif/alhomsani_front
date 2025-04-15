@@ -353,6 +353,18 @@ function ProfilePage() {
   const toggleFavorite = async (carId: number, isFavorite: boolean) => {
     if (!profile || !isCurrentUser) return;
 
+    // Optimistically update UI
+    if (isFavorite) {
+      // Remove from favorites list immediately
+      setProfile({
+        ...profile,
+        favorite_cars: profile.favorite_cars.filter((id) => id !== carId),
+      });
+      setFavoriteCars(favoriteCars.filter((car) => car.id !== carId));
+    } else {
+      // We'll add it after successful API call since we need the car data
+    }
+
     try {
       const token = await getToken();
       const endpoint = isFavorite
@@ -369,19 +381,23 @@ function ProfilePage() {
       });
 
       if (!response.ok) {
+        // Check if the error is because the car is already in the desired state
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.detail && errorData.detail.includes("already")) {
+          toast.info(
+            isFavorite
+              ? "Already removed from favorites"
+              : "Already in your favorites",
+          );
+          return;
+        }
         throw new Error(
           `Failed to ${isFavorite ? "remove from" : "add to"} favorites`,
         );
       }
 
-      // Update local state
-      if (isFavorite) {
-        setProfile({
-          ...profile,
-          favorite_cars: profile.favorite_cars.filter((id) => id !== carId),
-        });
-        setFavoriteCars(favoriteCars.filter((car) => car.id !== carId));
-      } else {
+      // If adding to favorites, fetch the car details and update state
+      if (!isFavorite) {
         // Fetch the car details using the same pattern as fetchCars
         const carResponse = await fetch(`${API_URL}/api/`, {
           headers: {
@@ -407,22 +423,60 @@ function ProfilePage() {
         setFavoriteCars([...favoriteCars, carData]);
       }
 
-      if (isFavorite) {
-        toast.success("The car has been removed from your favorites.");
-      } else {
-        toast.success("The car has been added to your favorites.");
-      }
+      toast.success(
+        isFavorite ? "Removed from favorites" : "Added to favorites",
+      );
     } catch (error) {
       console.error("Error toggling favorite:", error);
       toast.error(
         `Failed to ${isFavorite ? "remove from" : "add to"} favorites. Please try again.`,
       );
+
+      // Revert the optimistic update if there was an error
+      if (isFavorite) {
+        // Fetch the car details to add it back
+        try {
+          const token = await getToken();
+          const carResponse = await fetch(`${API_URL}/api/`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (carResponse.ok) {
+            const allCars = await carResponse.json();
+            const carData = allCars.find((c: CarType) => c.id === carId);
+
+            if (carData) {
+              setProfile({
+                ...profile,
+                favorite_cars: [...profile.favorite_cars, carId],
+              });
+              setFavoriteCars([...favoriteCars, carData]);
+            }
+          }
+        } catch (e) {
+          console.error("Error reverting optimistic update:", e);
+        }
+      }
     }
   };
 
   // Toggle bookmark
   const toggleBookmark = async (carId: number, isBookmarked: boolean) => {
     if (!profile || !isCurrentUser) return;
+
+    // Optimistically update UI
+    if (isBookmarked) {
+      // Remove from bookmarks list immediately
+      setProfile({
+        ...profile,
+        bookmarked_cars: profile.bookmarked_cars.filter((id) => id !== carId),
+      });
+      setBookmarkedCars(bookmarkedCars.filter((car) => car.id !== carId));
+    } else {
+      // We'll add it after successful API call since we need the car data
+    }
 
     try {
       const token = await getToken();
@@ -440,19 +494,23 @@ function ProfilePage() {
       });
 
       if (!response.ok) {
+        // Check if the error is because the car is already in the desired state
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.detail && errorData.detail.includes("already")) {
+          toast.info(
+            isBookmarked
+              ? "Already removed from bookmarks"
+              : "Already in your bookmarks",
+          );
+          return;
+        }
         throw new Error(
           `Failed to ${isBookmarked ? "remove from" : "add to"} bookmarks`,
         );
       }
 
-      // Update local state
-      if (isBookmarked) {
-        setProfile({
-          ...profile,
-          bookmarked_cars: profile.bookmarked_cars.filter((id) => id !== carId),
-        });
-        setBookmarkedCars(bookmarkedCars.filter((car) => car.id !== carId));
-      } else {
+      // If adding to bookmarks, fetch the car details and update state
+      if (!isBookmarked) {
         // Fetch the car details using the same pattern as fetchCars
         const carResponse = await fetch(`${API_URL}/api/`, {
           headers: {
@@ -478,16 +536,42 @@ function ProfilePage() {
         setBookmarkedCars([...bookmarkedCars, carData]);
       }
 
-      if (isBookmarked) {
-        toast.success("The car has been removed from your bookmarks.");
-      } else {
-        toast.success("The car has been added to your bookmarks.");
-      }
+      toast.success(
+        isBookmarked ? "Removed from bookmarks" : "Added to bookmarks",
+      );
     } catch (error) {
       console.error("Error toggling bookmark:", error);
       toast.error(
         `Failed to ${isBookmarked ? "remove from" : "add to"} bookmarks. Please try again.`,
       );
+
+      // Revert the optimistic update if there was an error
+      if (isBookmarked) {
+        // Fetch the car details to add it back
+        try {
+          const token = await getToken();
+          const carResponse = await fetch(`${API_URL}/api/`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (carResponse.ok) {
+            const allCars = await carResponse.json();
+            const carData = allCars.find((c: CarType) => c.id === carId);
+
+            if (carData) {
+              setProfile({
+                ...profile,
+                bookmarked_cars: [...profile.bookmarked_cars, carId],
+              });
+              setBookmarkedCars([...bookmarkedCars, carData]);
+            }
+          }
+        } catch (e) {
+          console.error("Error reverting optimistic update:", e);
+        }
+      }
     }
   };
   const getCarNameFromActivity = (carId: number): string =>

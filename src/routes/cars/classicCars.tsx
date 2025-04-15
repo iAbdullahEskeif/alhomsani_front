@@ -5,30 +5,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { API_URL } from "../../config";
 import { useAuth } from "@clerk/clerk-react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  X,
-  Tag,
-  DollarSign,
-  Package,
-  Layers,
-  FileText,
-  ImageIcon,
-  AlertCircle,
-  Gauge,
-  Heart,
-  Bookmark,
-  Car,
-  Zap,
-  Clock,
-  Scale,
-  Ruler,
-  Fuel,
-  Box,
-  Check,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X, Tag, DollarSign, Package, Layers, FileText, ImageIcon, AlertCircle, Gauge, Heart, Bookmark, Car, Zap, Clock, Scale, Ruler, Fuel, Box, Check } from 'lucide-react';
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -318,8 +295,16 @@ function ClassicCars() {
       return;
     }
 
+    const isFavorite = favorites.includes(carId);
+    
+    // Optimistically update UI
+    if (isFavorite) {
+      setFavorites(favorites.filter((id) => id !== carId));
+    } else {
+      setFavorites([...favorites, carId]);
+    }
+    
     try {
-      const isFavorite = favorites.includes(carId);
       const endpoint = isFavorite
         ? `/profiles/favorites/remove/${carId}/`
         : `/profiles/favorites/add/${carId}/`;
@@ -335,22 +320,29 @@ function ClassicCars() {
       });
 
       if (!response.ok) {
+        // Check if the error is because the car is already favorited/unfavorited
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.detail && errorData.detail.includes("already")) {
+          // The car is already in the desired state, so we can keep our optimistic update
+          toast.info(isFavorite ? "Already removed from favorites" : "Already in your favorites");
+          return;
+        }
         throw new Error(
-          `Failed to ${isFavorite ? "remove from" : "add to"} favorites`,
+          `Failed to ${isFavorite ? "remove from" : "add to"} favorites`
         );
       }
-
-      // Update local state
-      if (isFavorite) {
-        setFavorites(favorites.filter((id) => id !== carId));
-        toast.success("Removed from favorites");
-      } else {
-        setFavorites([...favorites, carId]);
-        toast.success("Added to favorites");
-      }
+      
+      toast.success(isFavorite ? "Removed from favorites" : "Added to favorites");
     } catch (error) {
       console.error("Error toggling favorite:", error);
       toast.error("Failed to update favorites");
+      
+      // Revert the optimistic update
+      if (isFavorite) {
+        setFavorites([...favorites, carId]);
+      } else {
+        setFavorites(favorites.filter((id) => id !== carId));
+      }
     }
   };
 
@@ -361,8 +353,16 @@ function ClassicCars() {
       return;
     }
 
+    const isBookmarked = bookmarks.includes(carId);
+    
+    // Optimistically update UI
+    if (isBookmarked) {
+      setBookmarks(bookmarks.filter((id) => id !== carId));
+    } else {
+      setBookmarks([...bookmarks, carId]);
+    }
+    
     try {
-      const isBookmarked = bookmarks.includes(carId);
       const endpoint = isBookmarked
         ? `/profiles/bookmarks/remove/${carId}/`
         : `/profiles/bookmarks/add/${carId}/`;
@@ -378,22 +378,29 @@ function ClassicCars() {
       });
 
       if (!response.ok) {
+        // Check if the error is because the car is already bookmarked/unbookmarked
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.detail && errorData.detail.includes("already")) {
+          // The car is already in the desired state, so we can keep our optimistic update
+          toast.info(isBookmarked ? "Already removed from bookmarks" : "Already in your bookmarks");
+          return;
+        }
         throw new Error(
-          `Failed to ${isBookmarked ? "remove from" : "add to"} bookmarks`,
+          `Failed to ${isBookmarked ? "remove from" : "add to"} bookmarks`
         );
       }
-
-      // Update local state
-      if (isBookmarked) {
-        setBookmarks(bookmarks.filter((id) => id !== carId));
-        toast.success("Removed from bookmarks");
-      } else {
-        setBookmarks([...bookmarks, carId]);
-        toast.success("Added to bookmarks");
-      }
+      
+      toast.success(isBookmarked ? "Removed from bookmarks" : "Added to bookmarks");
     } catch (error) {
       console.error("Error toggling bookmark:", error);
       toast.error("Failed to update bookmarks");
+      
+      // Revert the optimistic update
+      if (isBookmarked) {
+        setBookmarks([...bookmarks, carId]);
+      } else {
+        setBookmarks(bookmarks.filter((id) => id !== carId));
+      }
     }
   };
 
@@ -1439,3 +1446,4 @@ function ClassicCars() {
 export const Route = createFileRoute("/cars/classicCars")({
   component: ClassicCars,
 });
+
