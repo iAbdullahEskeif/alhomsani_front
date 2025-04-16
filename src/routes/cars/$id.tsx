@@ -71,6 +71,7 @@ interface Review {
   reviewer: string;
   car: number;
   review: string;
+  reviewer_Profile_pic: string;
   time_written: string;
 }
 
@@ -829,9 +830,18 @@ function ProductDetail() {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center">
-                            <div className="bg-amber-800/30 text-amber-300 p-1.5 rounded-full mr-2">
-                              <User className="size-4" />
-                            </div>
+                            <div className="bg-amber-800/30 text-amber-300 p-1.5 rounded-full mr-2"></div>
+                            <Button>
+                              {review.reviewer_Profile_pic !== null ? (
+                                <img
+                                  src={review.reviewer_Profile_pic}
+                                  alt="Profile"
+                                  className="size-4 rounded-full"
+                                />
+                              ) : (
+                                <User className="size-4" />
+                              )}
+                            </Button>
                             <Button
                               variant="link"
                               className="font-medium text-white p-0 h-auto hover:text-amber-300"
