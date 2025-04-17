@@ -836,10 +836,10 @@ function ProductDetail() {
                                 <img
                                   src={review.reviewer_Profile_pic}
                                   alt="Profile"
-                                  className="size-4 rounded-full"
+                                  className="size-8 rounded-full"
                                 />
                               ) : (
-                                <User className="size-4" />
+                                <User className="size-8" />
                               )}
                             </Button>
                             <Button
