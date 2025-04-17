@@ -1,5 +1,3 @@
-"se client";
-
 import { useState, useEffect, useRef } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useAuth } from "@clerk/clerk-react";
@@ -531,7 +529,7 @@ function ProductDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 {(showAllFeatures
                   ? product.key_features || []
                   : (product.key_features || []).slice(0, 6)
@@ -831,17 +829,22 @@ function ProductDetail() {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center">
                             <div className="bg-amber-800/30 text-amber-300 p-1.5 rounded-full mr-2"></div>
-                            <Button>
+                            <div className="flex-shrink-0 mr-2">
                               {review.reviewer_Profile_pic !== null ? (
                                 <img
-                                  src={review.reviewer_Profile_pic}
+                                  src={
+                                    review.reviewer_Profile_pic ||
+                                    "/placeholder.svg"
+                                  }
                                   alt="Profile"
-                                  className="size-8 rounded-full"
+                                  className="size-8 rounded-full object-cover"
                                 />
                               ) : (
-                                <User className="size-8" />
+                                <div className="size-8 rounded-full bg-zinc-800 flex items-center justify-center">
+                                  <User className="size-5 text-zinc-400" />
+                                </div>
                               )}
-                            </Button>
+                            </div>
                             <Button
                               variant="link"
                               className="font-medium text-white p-0 h-auto hover:text-amber-300"
