@@ -1,5 +1,3 @@
-
-// src/routes/profile/index.tsx
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useUser } from "@clerk/clerk-react";
 import { useEffect } from "react";
@@ -13,10 +11,10 @@ function StalkIndexRedirect() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (isLoaded && user?.id) {
+        if (isLoaded && user?.username) {
             navigate({
                 to: "/profile/stalk/$id",
-                params: { id: user.id },
+                params: { id: user.username },
             });
         }
     }, [isLoaded, user, navigate]);

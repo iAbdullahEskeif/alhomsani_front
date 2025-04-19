@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 
 import { useState, useRef, useEffect, useCallback } from "react"
@@ -45,6 +47,7 @@ import type { Product } from "@/types/interfaces"
 function ClassicCars() {
     const ref = useRef<HTMLDivElement>(null)
     const isVisible = useIsVisible(ref)
+    const [isMobile, setIsMobile] = useState<boolean>(false)
 
     const [currentIndex, setCurrentIndex] = useState<number>(0)
     const [newProduct, setNewProduct] = useState<Product>({
@@ -85,6 +88,22 @@ function ClassicCars() {
     const [newFeature, setNewFeature] = useState<string>("")
 
     const { getToken, isSignedIn } = useAuth()
+
+    // Check if mobile on mount and when window resizes
+    useEffect(() => {
+        const checkIfMobile = () => {
+            setIsMobile(window.innerWidth < 640)
+        }
+
+        // Initial check
+        checkIfMobile()
+
+        // Add event listener
+        window.addEventListener("resize", checkIfMobile)
+
+        // Cleanup
+        return () => window.removeEventListener("resize", checkIfMobile)
+    }, [])
 
     // Fetch user's favorites and bookmarks
     useEffect(() => {
@@ -409,21 +428,16 @@ function ClassicCars() {
 
         const visibleProducts: Product[] = []
 
-        // Always show the current card
         if (products.length > 0) {
             visibleProducts.push(products[currentIndex])
         }
 
-        // On medium screens and larger, show more cards
-        if (window.innerWidth >= 768) {
-            if (products.length > 1) {
-                visibleProducts.push(products[(currentIndex + 1) % products.length])
-            }
+        if (products.length > 1) {
+            visibleProducts.push(products[(currentIndex + 1) % products.length])
+        }
 
-            // On large screens, show a third card
-            if (window.innerWidth >= 1024 && products.length > 2) {
-                visibleProducts.push(products[(currentIndex + 2) % products.length])
-            }
+        if (products.length > 2) {
+            visibleProducts.push(products[(currentIndex + 2) % products.length])
         }
 
         return visibleProducts
@@ -495,7 +509,7 @@ function ClassicCars() {
     }
 
     const formatPrice = (price: string): string => {
-        return `$${Number.parseFloat(price).toFixed(2)}`
+        return `${Number.parseFloat(price).toFixed(2)}`
     }
 
     const addKeyFeature = () => {
@@ -525,16 +539,6 @@ function ClassicCars() {
             key_features: updatedFeatures,
         })
     }
-
-    useEffect(() => {
-        const handleResize = () => {
-            // Force a re-render to update visible products
-            setCurrentIndex((prev) => prev)
-        }
-
-        window.addEventListener("resize", handleResize)
-        return () => window.removeEventListener("resize", handleResize)
-    }, [])
 
     return (
         <div className="min-h-screen bg-zinc-950">
@@ -1228,78 +1232,153 @@ function ClassicCars() {
                     </Card>
                 ) : products.length > 0 ? (
                     <>
-                        <div className="grid grid-cols-1 gap-4" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                            {getVisibleProducts().map((product) => (
-                                <div key={product.id} className="transition-all duration-500 ease-in-out">
-                                    <Card className="bg-zinc-900 border-zinc-800 shadow-md overflow-hidden h-full flex flex-col hover:border-amber-700 transition-all duration-300">
-                                        <div className="relative overflow-hidden bg-zinc-900">
-                                            <img
-                                                src={product.image_url || "/placeholder.svg"}
-                                                alt={product.name}
-                                                className="w-full h-48 object-cover transition-transform duration-700 hover:scale-105"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent opacity-60"></div>
-                                            <div className="absolute top-2 right-2 flex gap-1">
-                                                <Button
-                                                    variant="secondary"
-                                                    size="icon"
-                                                    className="size-8 bg-zinc-900/80 hover:bg-zinc-800"
-                                                    onClick={() => toggleFavorite(product.id)}
-                                                >
-                                                    <Heart
-                                                        className={`size-4 ${favorites.includes(product.id) ? "fill-amber-400 text-amber-400" : "text-zinc-400"}`}
-                                                    />
-                                                </Button>
-                                                <Button
-                                                    variant="secondary"
-                                                    size="icon"
-                                                    className="size-8 bg-zinc-900/80 hover:bg-zinc-800"
-                                                    onClick={() => toggleBookmark(product.id)}
-                                                >
-                                                    <Bookmark
-                                                        className={`size-4 ${bookmarks.includes(product.id) ? "fill-amber-400 text-amber-400" : "text-zinc-400"}`}
-                                                    />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                        <CardContent className="p-5 flex-grow bg-zinc-900">
-                                            <h3 className="text-xl font-medium text-white mb-3">{product.name}</h3>
-
-                                            <div className="space-y-2 mb-4">
-                                                <div className="flex justify-between pb-2 border-b border-zinc-800">
-                                                    <span className="text-zinc-500">Price</span>
-                                                    <span className="font-medium text-amber-300">${formatPrice(product.price)}</span>
-                                                </div>
-                                                <div className="flex justify-between pb-2 border-b border-zinc-800">
-                                                    <span className="text-zinc-500">Stock</span>
-                                                    <span className="font-medium text-white">{product.stock_quantity}</span>
-                                                </div>
-                                                <div className="flex justify-between pb-2 border-b border-zinc-800">
-                                                    <span className="text-zinc-500">Status</span>
-                                                    <span
-                                                        className={`font-medium ${product.availability === "in_stock" ? "text-emerald-500" : "text-zinc-400"}`}
+                        {isMobile ? (
+                            <div className="space-y-4" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+                                {getVisibleProducts().map((product) => (
+                                    <div key={product.id} className="transition-all duration-500 ease-in-out">
+                                        <Card className="bg-zinc-900 border-zinc-800 shadow-md overflow-hidden h-full flex flex-col hover:border-amber-700 transition-all duration-300">
+                                            <div className="relative overflow-hidden bg-zinc-900">
+                                                <img
+                                                    src={product.image_url || "/placeholder.svg"}
+                                                    alt={product.name}
+                                                    className="w-full h-48 object-cover transition-transform duration-700 hover:scale-105"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent opacity-60"></div>
+                                                <div className="absolute top-2 right-2 flex gap-1">
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="icon"
+                                                        className="size-8 bg-zinc-900/80 hover:bg-zinc-800"
+                                                        onClick={() => toggleFavorite(product.id)}
                                                     >
-                                                        {product.availability === "in_stock" ? "In Stock" : "Out of Stock"}
-                                                    </span>
+                                                        <Heart
+                                                            className={`size-4 ${favorites.includes(product.id) ? "fill-amber-400 text-amber-400" : "text-zinc-400"}`}
+                                                        />
+                                                    </Button>
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="icon"
+                                                        className="size-8 bg-zinc-900/80 hover:bg-zinc-800"
+                                                        onClick={() => toggleBookmark(product.id)}
+                                                    >
+                                                        <Bookmark
+                                                            className={`size-4 ${bookmarks.includes(product.id) ? "fill-amber-400 text-amber-400" : "text-zinc-400"}`}
+                                                        />
+                                                    </Button>
                                                 </div>
                                             </div>
+                                            <CardContent className="p-5 flex-grow bg-zinc-900">
+                                                <h3 className="text-xl font-medium text-white mb-3">{product.name}</h3>
 
-                                            <div className="mt-auto">
-                                                <Button
-                                                    asChild
-                                                    variant="secondary"
-                                                    className="w-full bg-amber-700 text-amber-100 border-amber-600 hover:bg-amber-600"
-                                                >
-                                                    <Link to="/cars/$id" params={{ id: product.id.toString() }}>
-                                                        View Details
-                                                    </Link>
-                                                </Button>
+                                                <div className="space-y-2 mb-4">
+                                                    <div className="flex justify-between pb-2 border-b border-zinc-800">
+                                                        <span className="text-zinc-500">Price</span>
+                                                        <span className="font-medium text-amber-300">${formatPrice(product.price)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between pb-2 border-b border-zinc-800">
+                                                        <span className="text-zinc-500">Stock</span>
+                                                        <span className="font-medium text-white">{product.stock_quantity}</span>
+                                                    </div>
+                                                    <div className="flex justify-between pb-2 border-b border-zinc-800">
+                                                        <span className="text-zinc-500">Status</span>
+                                                        <span
+                                                            className={`font-medium ${product.availability === "in_stock" ? "text-emerald-500" : "text-zinc-400"}`}
+                                                        >
+                                                            {product.availability === "in_stock" ? "In Stock" : "Out of Stock"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-auto">
+                                                    <Button
+                                                        asChild
+                                                        variant="secondary"
+                                                        className="w-full bg-amber-700 text-amber-100 border-amber-600 hover:bg-amber-600"
+                                                    >
+                                                        <Link to="/cars/$id" params={{ id: product.id.toString() }}>
+                                                            View Details
+                                                        </Link>
+                                                    </Button>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex overflow-hidden" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+                                {getVisibleProducts().map((product) => (
+                                    <div key={product.id} className="w-1/3 p-4 transition-all duration-500 ease-in-out">
+                                        <Card className="bg-zinc-900 border-zinc-800 shadow-md overflow-hidden h-full flex flex-col hover:border-amber-700 transition-all duration-300">
+                                            <div className="relative overflow-hidden bg-zinc-900">
+                                                <img
+                                                    src={product.image_url || "/placeholder.svg"}
+                                                    alt={product.name}
+                                                    className="w-full h-48 object-cover transition-transform duration-700 hover:scale-105"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent opacity-60"></div>
+                                                <div className="absolute top-2 right-2 flex gap-1">
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="icon"
+                                                        className="size-8 bg-zinc-900/80 hover:bg-zinc-800"
+                                                        onClick={() => toggleFavorite(product.id)}
+                                                    >
+                                                        <Heart
+                                                            className={`size-4 ${favorites.includes(product.id) ? "fill-amber-400 text-amber-400" : "text-zinc-400"}`}
+                                                        />
+                                                    </Button>
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="icon"
+                                                        className="size-8 bg-zinc-900/80 hover:bg-zinc-800"
+                                                        onClick={() => toggleBookmark(product.id)}
+                                                    >
+                                                        <Bookmark
+                                                            className={`size-4 ${bookmarks.includes(product.id) ? "fill-amber-400 text-amber-400" : "text-zinc-400"}`}
+                                                        />
+                                                    </Button>
+                                                </div>
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            ))}
-                        </div>
+                                            <CardContent className="p-5 flex-grow bg-zinc-900">
+                                                <h3 className="text-xl font-medium text-white mb-3">{product.name}</h3>
+
+                                                <div className="space-y-2 mb-4">
+                                                    <div className="flex justify-between pb-2 border-b border-zinc-800">
+                                                        <span className="text-zinc-500">Price</span>
+                                                        <span className="font-medium text-amber-300">${formatPrice(product.price)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between pb-2 border-b border-zinc-800">
+                                                        <span className="text-zinc-500">Stock</span>
+                                                        <span className="font-medium text-white">{product.stock_quantity}</span>
+                                                    </div>
+                                                    <div className="flex justify-between pb-2 border-b border-zinc-800">
+                                                        <span className="text-zinc-500">Status</span>
+                                                        <span
+                                                            className={`font-medium ${product.availability === "in_stock" ? "text-emerald-500" : "text-zinc-400"}`}
+                                                        >
+                                                            {product.availability === "in_stock" ? "In Stock" : "Out of Stock"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-auto">
+                                                    <Button
+                                                        asChild
+                                                        variant="secondary"
+                                                        className="w-full bg-amber-700 text-amber-100 border-amber-600 hover:bg-amber-600"
+                                                    >
+                                                        <Link to="/cars/$id" params={{ id: product.id.toString() }}>
+                                                            View Details
+                                                        </Link>
+                                                    </Button>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         <div className="flex justify-center mt-8">
                             <Button
