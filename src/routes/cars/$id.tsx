@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useAuth } from "@clerk/clerk-react";
 import { API_URL } from "../../config";
-import StripeComponent from "../../components/StripeComponent.tsx";
+import StripeComponent from "../../services/stripe/StripeComponent.tsx";
 import {
   Check,
   ShieldCheck,
@@ -34,58 +34,13 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { format, formatDistanceToNow } from "date-fns";
-
-interface CarType {
-  id: number;
-  name: string;
-  description: string;
-  price: string;
-  stock_quantity: number;
-  sku: string;
-  category: number;
-  availability: "in_stock" | "out_of_stock";
-  car_type: "classic" | "luxury" | "electrical";
-  image_url: string;
-  created_at: string;
-  updated_at: string;
-  image_public_id: string;
-  key_features: string[];
-  engine: string;
-  power: string;
-  torque: string;
-  transmission: string;
-  acceleration_0_100: string;
-  top_speed: string;
-  fuel_economy: string;
-  dimensions: string;
-  weight_kg: number;
-  wheelbase_mm: number;
-  fuel_tank_capacity: number;
-  trunk_capacity_liters: number;
-}
-
-interface Review {
-  id: number;
-  reviewer: string;
-  car: number;
-  review: string;
-  reviewer_Profile_pic: string;
-  time_written: string;
-}
-
-interface SimilarCar {
-  id: number;
-  name: string;
-  price: string;
-  image_url: string;
-  car_type: string;
-}
+import { Product, Review } from "@/types/interfaces.ts";
 
 function ProductDetail() {
   const { id } = useParams({ from: "/cars/$id" });
   const [showAllFeatures, setShowAllFeatures] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [product, setProduct] = useState<CarType | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
@@ -93,10 +48,8 @@ function ProductDetail() {
   const [newReview, setNewReview] = useState("");
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  const [similarCars, setSimilarCars] = useState<SimilarCar[]>([]);
+  const [similarCars, setSimilarCars] = useState<Product[]>([]);
   const reviewTextareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Replace the above removed code with this simplified version
   const { isSignedIn, getToken } = useAuth();
 
   // Check if car is in favorites/bookmarks on component mount
@@ -217,7 +170,7 @@ function ProductDetail() {
         const data = await response.json();
         // Filter out the current car
         const filteredCars = data
-          .filter((car: SimilarCar) => car.id !== Number(id))
+          .filter((car: Product) => car.id !== Number(id))
           .slice(0, 3);
         setSimilarCars(filteredCars);
       } catch (error) {
@@ -396,7 +349,6 @@ function ProductDetail() {
   const destinationFee = 1095;
   const taxAndTitle = Math.round(basePrice * 0.09); // Approximately 9% for tax and title
   const totalPrice = basePrice + destinationFee + taxAndTitle;
-
   return (
     <div className="bg-zinc-950">
       <div className="w-full max-w-7xl mx-auto p-4 pt-6">
@@ -531,9 +483,9 @@ function ProductDetail() {
             <CardContent>
               <div className="grid grid-cols-1 gap-3">
                 {(showAllFeatures
-                  ? product.key_features || []
-                  : (product.key_features || []).slice(0, 6)
-                ).map((feature, index) => (
+                  ? JSON.parse(product?.key_features?.[0] || "[]")
+                  : JSON.parse(product?.key_features?.[0] || "[]").slice(0, 6)
+                ).map((feature: string, index: number) => (
                   <div
                     key={index}
                     className="flex items-start bg-zinc-800 p-3 rounded-lg"
@@ -543,7 +495,7 @@ function ProductDetail() {
                   </div>
                 ))}
               </div>
-              {(product.key_features || []).length > 6 && (
+              {JSON.parse(product?.key_features?.[0] || "[]").length > 6 && (
                 <Button
                   variant="ghost"
                   onClick={() => setShowAllFeatures(!showAllFeatures)}
@@ -563,14 +515,14 @@ function ProductDetail() {
                         strokeLinejoin="round"
                         strokeWidth="2"
                         d="M5 15l7-7 7 7"
-                      ></path>
+                      />
                     ) : (
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
                         d="M19 9l-7 7-7-7"
-                      ></path>
+                      />
                     )}
                   </svg>
                 </Button>
@@ -851,8 +803,8 @@ function ProductDetail() {
                               asChild
                             >
                               <Link
-                                to="/profile/$username"
-                                params={{ username: review.reviewer }}
+                                to="/profile/stalk/$id"
+                                params={{ id: String(review.reviewer_id) }}
                               >
                                 {review.reviewer}
                               </Link>

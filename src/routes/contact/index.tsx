@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 
 import { useIsVisible } from "@/components/hooks/useisvisible";
@@ -19,7 +17,7 @@ import {
 import { useState, useRef } from "react";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
-function Contact() {
+function Contact(){
   const ref = useRef<HTMLDivElement>(null);
   const isVisible = useIsVisible(ref);
   const [formState, setFormState] = useState({
@@ -32,9 +30,7 @@ function Contact() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission logic here
     console.log("Form submitted:", formState);
-    // Reset form or show success message
   };
 
   return (
@@ -221,6 +217,6 @@ function Contact() {
   );
 }
 
-export const Route = createFileRoute("/contact")({
+export const Route = createFileRoute("/contact/")({
   component: Contact,
 });

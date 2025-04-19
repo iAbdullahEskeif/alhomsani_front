@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/clerk-react";
-import { API_URL } from "../config";
+import { API_URL } from "../../config";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -12,19 +12,10 @@ import {
 } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-
+import { StripeComponentProps , PaymentIntentResponse} from "@/types/interfaces";
 // Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-// Types
-interface StripeComponentProps {
-  carId: number;
-  quantity: number;
-}
-
-interface PaymentIntentResponse {
-  client_secret: string;
-}
 
 // API function
 const createPaymentIntent = async (
@@ -58,14 +49,6 @@ export default function StripeComponent({
   const { getToken } = useAuth();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Fix for scroll issue - ensure body can scroll when component mounts
-  useEffect(() => {
-    // No need to modify body overflow here - we'll handle it in the Dialog component
-    return () => {
-      // Cleanup function is empty as we're not changing anything
-    };
-  }, []);
 
   const mutation = useMutation({
     mutationFn: async () => {

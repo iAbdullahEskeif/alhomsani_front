@@ -1,8 +1,7 @@
 // API Configuration
 export const API_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://alhomsanibackend-production.up.railway.app";
-export const API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
+  import.meta.env.VITE_API_URL
+export const API_VERSION = import.meta.env.VITE_API_VERSION;
 
 // Feature Flags
 export const ENABLE_DEBUG = import.meta.env.VITE_ENABLE_DEBUG === "true";

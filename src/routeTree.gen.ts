@@ -11,11 +11,11 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as ContactImport } from './routes/contact'
-import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
 import { Route as ProfileIndexImport } from './routes/profile/index'
 import { Route as PaymentConfirmationIndexImport } from './routes/payment-confirmation/index'
+import { Route as ContactIndexImport } from './routes/contact/index'
+import { Route as AboutIndexImport } from './routes/about/index'
 import { Route as ProfileUsernameImport } from './routes/profile/$username'
 import { Route as CarsLuxuryCarsImport } from './routes/cars/luxuryCars'
 import { Route as CarsFutureclassicCarsImport } from './routes/cars/futureclassicCars'
@@ -23,20 +23,10 @@ import { Route as CarsElectricalCarsImport } from './routes/cars/electricalCars'
 import { Route as CarsConceptCarsImport } from './routes/cars/conceptCars'
 import { Route as CarsClassicCarsImport } from './routes/cars/classicCars'
 import { Route as CarsIdImport } from './routes/cars/$id'
+import { Route as ProfileStalkIndexImport } from './routes/profile/stalk/index'
+import { Route as ProfileStalkIdImport } from './routes/profile/stalk/$id'
 
 // Create/Update Routes
-
-const ContactRoute = ContactImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const AboutRoute = AboutImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const IndexRoute = IndexImport.update({
   id: '/',
@@ -53,6 +43,18 @@ const ProfileIndexRoute = ProfileIndexImport.update({
 const PaymentConfirmationIndexRoute = PaymentConfirmationIndexImport.update({
   id: '/payment-confirmation/',
   path: '/payment-confirmation/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ContactIndexRoute = ContactIndexImport.update({
+  id: '/contact/',
+  path: '/contact/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AboutIndexRoute = AboutIndexImport.update({
+  id: '/about/',
+  path: '/about/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -98,6 +100,18 @@ const CarsIdRoute = CarsIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const ProfileStalkIndexRoute = ProfileStalkIndexImport.update({
+  id: '/profile/stalk/',
+  path: '/profile/stalk/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ProfileStalkIdRoute = ProfileStalkIdImport.update({
+  id: '/profile/stalk/$id',
+  path: '/profile/stalk/$id',
+  getParentRoute: () => rootRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -107,20 +121,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutImport
-      parentRoute: typeof rootRoute
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactImport
       parentRoute: typeof rootRoute
     }
     '/cars/$id': {
@@ -172,6 +172,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileUsernameImport
       parentRoute: typeof rootRoute
     }
+    '/about/': {
+      id: '/about/'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/contact/': {
+      id: '/contact/'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/payment-confirmation/': {
       id: '/payment-confirmation/'
       path: '/payment-confirmation'
@@ -186,6 +200,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileIndexImport
       parentRoute: typeof rootRoute
     }
+    '/profile/stalk/$id': {
+      id: '/profile/stalk/$id'
+      path: '/profile/stalk/$id'
+      fullPath: '/profile/stalk/$id'
+      preLoaderRoute: typeof ProfileStalkIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/profile/stalk/': {
+      id: '/profile/stalk/'
+      path: '/profile/stalk'
+      fullPath: '/profile/stalk'
+      preLoaderRoute: typeof ProfileStalkIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -193,8 +221,6 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/contact': typeof ContactRoute
   '/cars/$id': typeof CarsIdRoute
   '/cars/classicCars': typeof CarsClassicCarsRoute
   '/cars/conceptCars': typeof CarsConceptCarsRoute
@@ -202,14 +228,16 @@ export interface FileRoutesByFullPath {
   '/cars/futureclassicCars': typeof CarsFutureclassicCarsRoute
   '/cars/luxuryCars': typeof CarsLuxuryCarsRoute
   '/profile/$username': typeof ProfileUsernameRoute
+  '/about': typeof AboutIndexRoute
+  '/contact': typeof ContactIndexRoute
   '/payment-confirmation': typeof PaymentConfirmationIndexRoute
   '/profile': typeof ProfileIndexRoute
+  '/profile/stalk/$id': typeof ProfileStalkIdRoute
+  '/profile/stalk': typeof ProfileStalkIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/contact': typeof ContactRoute
   '/cars/$id': typeof CarsIdRoute
   '/cars/classicCars': typeof CarsClassicCarsRoute
   '/cars/conceptCars': typeof CarsConceptCarsRoute
@@ -217,15 +245,17 @@ export interface FileRoutesByTo {
   '/cars/futureclassicCars': typeof CarsFutureclassicCarsRoute
   '/cars/luxuryCars': typeof CarsLuxuryCarsRoute
   '/profile/$username': typeof ProfileUsernameRoute
+  '/about': typeof AboutIndexRoute
+  '/contact': typeof ContactIndexRoute
   '/payment-confirmation': typeof PaymentConfirmationIndexRoute
   '/profile': typeof ProfileIndexRoute
+  '/profile/stalk/$id': typeof ProfileStalkIdRoute
+  '/profile/stalk': typeof ProfileStalkIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/contact': typeof ContactRoute
   '/cars/$id': typeof CarsIdRoute
   '/cars/classicCars': typeof CarsClassicCarsRoute
   '/cars/conceptCars': typeof CarsConceptCarsRoute
@@ -233,16 +263,18 @@ export interface FileRoutesById {
   '/cars/futureclassicCars': typeof CarsFutureclassicCarsRoute
   '/cars/luxuryCars': typeof CarsLuxuryCarsRoute
   '/profile/$username': typeof ProfileUsernameRoute
+  '/about/': typeof AboutIndexRoute
+  '/contact/': typeof ContactIndexRoute
   '/payment-confirmation/': typeof PaymentConfirmationIndexRoute
   '/profile/': typeof ProfileIndexRoute
+  '/profile/stalk/$id': typeof ProfileStalkIdRoute
+  '/profile/stalk/': typeof ProfileStalkIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
-    | '/contact'
     | '/cars/$id'
     | '/cars/classicCars'
     | '/cars/conceptCars'
@@ -250,13 +282,15 @@ export interface FileRouteTypes {
     | '/cars/futureclassicCars'
     | '/cars/luxuryCars'
     | '/profile/$username'
+    | '/about'
+    | '/contact'
     | '/payment-confirmation'
     | '/profile'
+    | '/profile/stalk/$id'
+    | '/profile/stalk'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/about'
-    | '/contact'
     | '/cars/$id'
     | '/cars/classicCars'
     | '/cars/conceptCars'
@@ -264,13 +298,15 @@ export interface FileRouteTypes {
     | '/cars/futureclassicCars'
     | '/cars/luxuryCars'
     | '/profile/$username'
+    | '/about'
+    | '/contact'
     | '/payment-confirmation'
     | '/profile'
+    | '/profile/stalk/$id'
+    | '/profile/stalk'
   id:
     | '__root__'
     | '/'
-    | '/about'
-    | '/contact'
     | '/cars/$id'
     | '/cars/classicCars'
     | '/cars/conceptCars'
@@ -278,15 +314,17 @@ export interface FileRouteTypes {
     | '/cars/futureclassicCars'
     | '/cars/luxuryCars'
     | '/profile/$username'
+    | '/about/'
+    | '/contact/'
     | '/payment-confirmation/'
     | '/profile/'
+    | '/profile/stalk/$id'
+    | '/profile/stalk/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  ContactRoute: typeof ContactRoute
   CarsIdRoute: typeof CarsIdRoute
   CarsClassicCarsRoute: typeof CarsClassicCarsRoute
   CarsConceptCarsRoute: typeof CarsConceptCarsRoute
@@ -294,14 +332,16 @@ export interface RootRouteChildren {
   CarsFutureclassicCarsRoute: typeof CarsFutureclassicCarsRoute
   CarsLuxuryCarsRoute: typeof CarsLuxuryCarsRoute
   ProfileUsernameRoute: typeof ProfileUsernameRoute
+  AboutIndexRoute: typeof AboutIndexRoute
+  ContactIndexRoute: typeof ContactIndexRoute
   PaymentConfirmationIndexRoute: typeof PaymentConfirmationIndexRoute
   ProfileIndexRoute: typeof ProfileIndexRoute
+  ProfileStalkIdRoute: typeof ProfileStalkIdRoute
+  ProfileStalkIndexRoute: typeof ProfileStalkIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  ContactRoute: ContactRoute,
   CarsIdRoute: CarsIdRoute,
   CarsClassicCarsRoute: CarsClassicCarsRoute,
   CarsConceptCarsRoute: CarsConceptCarsRoute,
@@ -309,8 +349,12 @@ const rootRouteChildren: RootRouteChildren = {
   CarsFutureclassicCarsRoute: CarsFutureclassicCarsRoute,
   CarsLuxuryCarsRoute: CarsLuxuryCarsRoute,
   ProfileUsernameRoute: ProfileUsernameRoute,
+  AboutIndexRoute: AboutIndexRoute,
+  ContactIndexRoute: ContactIndexRoute,
   PaymentConfirmationIndexRoute: PaymentConfirmationIndexRoute,
   ProfileIndexRoute: ProfileIndexRoute,
+  ProfileStalkIdRoute: ProfileStalkIdRoute,
+  ProfileStalkIndexRoute: ProfileStalkIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -324,8 +368,6 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/about",
-        "/contact",
         "/cars/$id",
         "/cars/classicCars",
         "/cars/conceptCars",
@@ -333,18 +375,16 @@ export const routeTree = rootRoute
         "/cars/futureclassicCars",
         "/cars/luxuryCars",
         "/profile/$username",
+        "/about/",
+        "/contact/",
         "/payment-confirmation/",
-        "/profile/"
+        "/profile/",
+        "/profile/stalk/$id",
+        "/profile/stalk/"
       ]
     },
     "/": {
       "filePath": "index.tsx"
-    },
-    "/about": {
-      "filePath": "about.tsx"
-    },
-    "/contact": {
-      "filePath": "contact.tsx"
     },
     "/cars/$id": {
       "filePath": "cars/$id.tsx"
@@ -367,11 +407,23 @@ export const routeTree = rootRoute
     "/profile/$username": {
       "filePath": "profile/$username.tsx"
     },
+    "/about/": {
+      "filePath": "about/index.tsx"
+    },
+    "/contact/": {
+      "filePath": "contact/index.tsx"
+    },
     "/payment-confirmation/": {
       "filePath": "payment-confirmation/index.tsx"
     },
     "/profile/": {
       "filePath": "profile/index.tsx"
+    },
+    "/profile/stalk/$id": {
+      "filePath": "profile/stalk/$id.tsx"
+    },
+    "/profile/stalk/": {
+      "filePath": "profile/stalk/index.tsx"
     }
   }
 }

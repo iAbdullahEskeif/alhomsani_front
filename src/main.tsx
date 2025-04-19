@@ -7,7 +7,7 @@ import { routeTree } from "./routeTree.gen";
 import "./index.css";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { clerkAppearance } from "./clerk-theme";
-import { SessionMonitor } from "./components/SessionMonitor";
+import { SessionMonitor } from "./services/clerk/SessionMonitor";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 

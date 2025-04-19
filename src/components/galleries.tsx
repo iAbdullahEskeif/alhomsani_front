@@ -6,15 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-interface GalleryItem {
-  name: string;
-  path: string;
-}
-
-interface Gallery {
-  title: string;
-  items: GalleryItem[];
-}
+import { GalleryItem , Gallery} from "@/types/interfaces"
 
 const Galleries = () => {
   const galleries: Gallery[] = [
